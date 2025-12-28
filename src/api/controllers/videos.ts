@@ -91,8 +91,8 @@ export async function generateVideo(
 
   const model = getModel(_model);
 
-  // 将秒转换为毫秒，只支持5秒和10秒
-  const durationMs = duration === 10 ? 10000 : 5000;
+  // 将秒转换为毫秒，支持5秒、10秒和12秒
+  const durationMs = duration === 12 ? 12000 : duration === 10 ? 10000 : 5000;
 
   logger.info(`使用模型: ${_model} 映射模型: ${model} 比例: ${ratio} 分辨率: ${resolution} 时长: ${duration}s`);
 

@@ -26,10 +26,10 @@ export default {
                     // 对于 multipart/form-data，允许字符串类型的数字
                     if (isMultiPart && typeof v === 'string') {
                         const num = parseInt(v);
-                        return num === 5 || num === 10;
+                        return num === 5 || num === 10 || num === 12;
                     }
                     // 对于 JSON，要求数字类型
-                    return _.isFinite(v) && (v === 5 || v === 10);
+                    return _.isFinite(v) && (v === 5 || v === 10 || v === 12);
                 })
                 .validate('body.file_paths', v => _.isUndefined(v) || _.isArray(v))
                 .validate('body.filePaths', v => _.isUndefined(v) || _.isArray(v))
