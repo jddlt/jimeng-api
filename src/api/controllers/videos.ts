@@ -304,7 +304,7 @@ export async function generateVideo(
                     "video_mode": 2,
                     "fps": 24,
                     "duration_ms": durationMs,
-                    "resolution": resolution,
+                    // "resolution": resolution,  // BUG FIX: 注释掉此参数，导致视频生成报错
                     "first_frame_image": first_frame_image,
                     "end_frame_image": end_frame_image,
                     "idip_meta_list": []
