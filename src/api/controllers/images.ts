@@ -391,7 +391,7 @@ async function generateImagesInternal(
     { data: requestData }
   );
 
-  const historyId = aigc_data.history_record_id;
+  const historyId = aigc_data?.history_record_id;
   if (!historyId)
     throw new APIException(EX.API_IMAGE_GENERATION_FAILED, "记录ID不存在");
 
@@ -485,7 +485,7 @@ async function generateJimeng4xMultiImages(
   // 使用 payload-builder 处理分辨率
   const resolutionResult = resolveResolution(userModel, regionInfo, resolution, ratio);
 
-  const targetImageCount = prompt.match(/(\d+)张/) ? parseInt(prompt.match(/(\d+)张/)[1]) : 4;
+  const targetImageCount = Math.min(prompt.match(/(\d+)张/) ? parseInt(prompt.match(/(\d+)张/)[1]) : 4, 4);
 
   logger.info(`使用 多图生成: ${targetImageCount}张图片 ${resolutionResult.width}x${resolutionResult.height} 精细度: ${sampleStrength}`);
 

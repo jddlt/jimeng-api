@@ -31,10 +31,17 @@ export default {
                     // 对于 JSON，要求数字类型
                     return _.isFinite(v) && (v === 5 || v === 10 || v === 12);
                 })
-                .validate('body.file_paths', v => _.isUndefined(v) || _.isArray(v))
-                .validate('body.filePaths', v => _.isUndefined(v) || _.isArray(v))
+                // 限制图片URL数量最多2个
+                .validate('body.file_paths', v => _.isUndefined(v) || (_.isArray(v) && v.length <= 2))
+                .validate('body.filePaths', v => _.isUndefined(v) || (_.isArray(v) && v.length <= 2))
                 .validate('body.response_format', v => _.isUndefined(v) || _.isString(v))
                 .validate('headers.authorization', _.isString);
+
+            // 限制上传文件数量最多2个
+            const uploadedFiles = request.files ? _.values(request.files) : [];
+            if (uploadedFiles.length > 2) {
+                throw new Error('最多只能上传2个图片文件');
+            }
 
             // refresh_token切分
             const tokens = tokenSplit(request.headers.authorization);

@@ -386,9 +386,17 @@ export async function generateVideo(
     }
 
     // 检查响应中是否有该 history_id 的数据
+    // 由于 API 存在最终一致性，早期轮询可能暂时获取不到记录，返回处理中状态继续轮询
     if (!result[historyId]) {
-      logger.warn(`API未返回历史记录，historyId: ${historyId}`);
-      throw new APIException(EX.API_IMAGE_GENERATION_FAILED, "记录不存在");
+      logger.warn(`API未返回历史记录 (轮询第${pollAttempts}次)，historyId: ${historyId}，继续等待...`);
+      return {
+        status: {
+          status: 20, // PROCESSING
+          itemCount: 0,
+          historyId
+        } as PollingStatus,
+        data: { status: 20, item_list: [] }
+      };
     }
 
     const historyData = result[historyId];
