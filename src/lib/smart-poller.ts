@@ -47,7 +47,12 @@ export class SmartPoller {
   private lastItemCount = 0;
   private stableItemCountRounds = 0;
   private options: Required<PollingOptions>;
-  
+
+  // 网络错误重试配置
+  private networkRetryCount = 0;
+  private readonly maxNetworkRetries = 3;
+  private readonly networkRetryDelay = 5000; // 5秒后重试
+
   constructor(options: PollingOptions = {}) {
     this.options = {
       maxPollCount: options.maxPollCount ?? POLLING_CONFIG.MAX_POLL_COUNT,
@@ -58,7 +63,30 @@ export class SmartPoller {
       type: options.type ?? 'image'
     };
   }
-  
+
+  /**
+   * 判断是否为可重试的网络错误
+   */
+  private isRetryableNetworkError(error: any): boolean {
+    const retryableCodes = [
+      'EAI_AGAIN',      // DNS 临时失败
+      'ECONNRESET',     // 连接重置
+      'ETIMEDOUT',      // 连接超时
+      'ECONNREFUSED',   // 连接被拒绝
+      'ENOTFOUND',      // DNS 解析失败
+      'ENETUNREACH',    // 网络不可达
+      'EHOSTUNREACH',   // 主机不可达
+      'EPIPE',          // 管道破裂
+      'ECONNABORTED',   // 连接中止
+    ];
+
+    return retryableCodes.includes(error?.code) ||
+           retryableCodes.includes(error?.cause?.code) ||
+           error?.message?.includes('getaddrinfo') ||
+           error?.message?.includes('ECONNRESET') ||
+           error?.message?.includes('socket hang up');
+  }
+
   /**
    * 获取状态名称
    */
@@ -219,6 +247,18 @@ export class SmartPoller {
         }
         
       } catch (error) {
+        // 判断是否为可重试的网络错误
+        const isRetryableError = this.isRetryableNetworkError(error);
+
+        if (isRetryableError && this.networkRetryCount < this.maxNetworkRetries) {
+          this.networkRetryCount++;
+          logger.warn(`轮询网络错误 (${this.networkRetryCount}/${this.maxNetworkRetries}): ${error.message}，${this.networkRetryDelay / 1000}秒后重试...`);
+          await new Promise(resolve => setTimeout(resolve, this.networkRetryDelay));
+          // 不增加 pollCount，重试当前轮询
+          this.pollCount--;
+          continue;
+        }
+
         logger.error(`轮询过程中发生错误: ${error.message}`);
         throw error;
       }
